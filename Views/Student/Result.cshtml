@@ -1,0 +1,227 @@
+@model OnlineQuizPortal.ViewModels.QuizResultViewModel
+
+<div class="container">
+    <h2>Quiz Result</h2>
+    <hr />
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>@Model.Quiz.Title</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12 text-center mb-4">
+                    <h3 class="text-primary">Score: @Model.Result.Score/@Model.Quiz.TotalMarks</h3>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Subject:</strong> @Model.Quiz.Subject</p>
+                    <p><strong>Total Questions:</strong> @Model.Quiz.Questions.Count</p>
+                    <p><strong>Time Taken:</strong> @((Model.Result.CompletedAt - Model.Result.StartedAt)?.TotalMinutes.ToString("F1")) minutes</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Questions Attempted:</strong> @Model.UserAnswers.Count of @Model.Quiz.Questions.Count</p>
+                    <p><strong>Questions Correct:</strong> @Model.UserAnswers.Count(a => a.SelectedOption == Model.Quiz.Questions.FirstOrDefault(q => q.QuestionId == a.QuestionId)?.CorrectAnswer) 
+                       of @Model.Quiz.Questions.Count</p>
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="progress" style="height: 25px;">
+                        @{
+                            var percentage = (decimal)Model.Result.Score * 100 / Model.Quiz.TotalMarks;
+                            var progressClass = percentage >= 80 ? "bg-success" : 
+                                              percentage >= 60 ? "bg-info" :
+                                              percentage >= 40 ? "bg-warning" : "bg-danger";
+                        }
+                        <div class="progress-bar @progressClass" role="progressbar" 
+                             style="width: @percentage%;" 
+                             aria-valuenow="@percentage" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            @percentage.ToString("F1")%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="questions-list">
+        @foreach (var question in Model.Quiz.Questions)
+        {
+            var userAnswer = Model.UserAnswers.FirstOrDefault(a => a.QuestionId == question.QuestionId);
+            var isCorrect = userAnswer?.SelectedOption == question.CorrectAnswer;
+            
+            <div class="card mb-3">
+                <div class="card-header @(isCorrect ? "bg-success text-white" : "bg-danger text-white")">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">@question.QuestionText</h5>
+                        @if (isCorrect)
+                        {
+                            <span class="badge bg-white text-success">✓ Correct</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-white text-danger">✗ Incorrect</span>
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="options">
+                        @{
+                            string GetOptionClass(string option)
+                            {
+                                if (option == question.CorrectAnswer)
+                                {
+                                    return "correct-answer";
+                                }
+                                if (userAnswer?.SelectedOption == option && !isCorrect)
+                                {
+                                    return "incorrect-answer";
+                                }
+                                return "";
+                            }
+
+                            string GetOptionIcon(string option)
+                            {
+                                if (option == question.CorrectAnswer)
+                                {
+                                    return "<i class='fas fa-check-circle text-success'></i>";
+                                }
+                                if (userAnswer?.SelectedOption == option && !isCorrect)
+                                {
+                                    return "<i class='fas fa-times-circle text-danger'></i>";
+                                }
+                                return "";
+                            }
+                        }
+
+                        <div class="option @GetOptionClass("A")">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>A.</strong> @question.OptionA
+                                </div>
+                                <div>@Html.Raw(GetOptionIcon("A"))</div>
+                            </div>
+                        </div>
+                        <div class="option @GetOptionClass("B")">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>B.</strong> @question.OptionB
+                                </div>
+                                <div>@Html.Raw(GetOptionIcon("B"))</div>
+                            </div>
+                        </div>
+                        <div class="option @GetOptionClass("C")">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>C.</strong> @question.OptionC
+                                </div>
+                                <div>@Html.Raw(GetOptionIcon("C"))</div>
+                            </div>
+                        </div>
+                        <div class="option @GetOptionClass("D")">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>D.</strong> @question.OptionD
+                                </div>
+                                <div>@Html.Raw(GetOptionIcon("D"))</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        @if (!isCorrect)
+                        {
+                            <div class="alert alert-info">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-grow-1">
+                                        <p class="mb-1">
+                                            <strong>Your Answer:</strong> 
+                                            @(userAnswer == null ? "Not answered" : $"Option {userAnswer.SelectedOption}")
+                                        </p>
+                                        <p class="mb-0">
+                                            <strong>Correct Answer:</strong> 
+                                            Option @question.CorrectAnswer
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="text-center mt-4">
+        <a asp-controller="Student" asp-action="Attempt" asp-route-id="@Model.Quiz.QuizId" class="btn btn-success me-2">
+            <i class="fas fa-redo-alt me-1"></i> Retake Quiz
+        </a>
+        <a asp-controller="Student" asp-action="Index" class="btn btn-primary">
+            <i class="fas fa-home me-1"></i> Back to Dashboard
+        </a>
+        <a asp-controller="Student" asp-action="History" class="btn btn-info ms-2">
+            <i class="fas fa-history me-1"></i> View History
+        </a>
+    </div>
+</div>
+
+<style>
+    .option {
+        padding: 12px 15px;
+        margin: 8px 0;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .option:hover {
+        transform: translateX(5px);
+    }
+
+    .option.correct-answer {
+        background-color: rgba(40, 167, 69, 0.1);
+        border-color: #28a745;
+    }
+
+    .option.incorrect-answer {
+        background-color: rgba(220, 53, 69, 0.1);
+        border-color: #dc3545;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .questions-list {
+        margin-top: 30px;
+    }
+
+    .card-header {
+        padding: 15px 20px;
+    }
+
+    .badge {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+
+    .alert {
+        border-radius: 8px;
+        padding: 15px 20px;
+        margin-bottom: 0;
+        border-left: 4px solid #17a2b8;
+        background-color: rgba(23, 162, 184, 0.1);
+    }
+
+    .alert p:last-child {
+        margin-bottom: 0;
+    }
+
+    .fas {
+        font-size: 1.1em;
+    }
+</style>

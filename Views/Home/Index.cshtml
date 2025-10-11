@@ -1,0 +1,143 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="hero-section">
+    <div class="container">
+        <h1 class="hero-title">Welcome to Online Quiz Portal</h1>
+        <p class="hero-subtitle">Transform learning with interactive quizzes and real-time assessment</p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            @if (!User.Identity?.IsAuthenticated == true)
+            {
+                <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>Get Started
+                </a>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                </a>
+            }
+            else
+            {
+                <a asp-controller="Home" asp-action="Index" class="btn btn-primary btn-lg">
+                    <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-edit"></i>
+            </div>
+            <h4>Create Quizzes</h4>
+            <p class="text-muted">Teachers and admins can easily create engaging multiple-choice quizzes with customizable questions and scoring.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h4>Timed Assessments</h4>
+            <p class="text-muted">Students take quizzes with built-in timers, ensuring fair assessment and time management skills.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h4>Instant Results</h4>
+            <p class="text-muted">Get immediate feedback with automatic scoring, detailed analytics, and performance tracking.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body text-center p-5">
+                <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                <h3>For Students</h3>
+                <p class="text-muted mb-4">Access available quizzes, take timed assessments, and track your progress with detailed results.</p>
+                <a asp-controller="Student" asp-action="Index" class="btn btn-success">
+                    <i class="fas fa-list me-2"></i>View Available Quizzes
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body text-center p-5">
+                <i class="fas fa-chalkboard-teacher fa-3x text-warning mb-3"></i>
+                <h3>For Teachers & Admins</h3>
+                <p class="text-muted mb-4">Create and manage quizzes, monitor student performance, and generate comprehensive reports.</p>
+                <a asp-controller="Quiz" asp-action="Index" class="btn btn-warning">
+                    <i class="fas fa-edit me-2"></i>Manage Quizzes
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center p-5">
+                <h2 class="mb-4">Why Choose Online Quiz Portal?</h2>
+                <div class="row g-4">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-mobile-alt fa-2x text-primary mb-3"></i>
+                            <h5>Responsive Design</h5>
+                            <p class="text-muted small">Works perfectly on all devices</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-shield-alt fa-2x text-success mb-3"></i>
+                            <h5>Secure & Reliable</h5>
+                            <p class="text-muted small">Built with modern security standards</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-bolt fa-2x text-warning mb-3"></i>
+                            <h5>Fast Performance</h5>
+                            <p class="text-muted small">Optimized for speed and efficiency</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-headset fa-2x text-info mb-3"></i>
+                            <h5>24/7 Support</h5>
+                            <p class="text-muted small">Always here to help you</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Add smooth scrolling and animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add fade-in animation to feature cards
+            const cards = document.querySelectorAll('.feature-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 200);
+            });
+        });
+    </script>
+}

@@ -1,0 +1,820 @@
+@model OnlineQuizPortal.ViewModels.QuizAttemptViewModel
+
+@{
+    ViewData["Title"] = "Quiz: " + Model.QuizTitle;
+    var totalTime = Model.Duration * 60;
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="text-primary">
+                <i class="fas fa-question-circle me-2"></i>@Model.QuizTitle
+            </h2>
+            <div class="text-center">
+                <div class="timer-display">
+                    <div class="h4 text-danger mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        <span id="timer">@Model.Duration:00</span>
+                    </div>
+                    <small class="text-muted">Time Remaining</small>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-8">
+                <span class="badge bg-secondary me-2">@Model.Subject</span>
+                <span class="badge bg-info me-2">@Model.Duration minutes</span>
+                <span class="badge bg-warning">@Model.TotalMarks marks</span>
+            </div>
+            <div class="col-md-4 text-end">
+                <small class="text-muted">
+                    Started: @Model.StartedAt.ToString("MMM dd, yyyy HH:mm")
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="quizForm" asp-controller="Student" asp-action="SubmitQuiz" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="QuizId" value="@Model.QuizId" />
+    <input type="hidden" name="StartedAt" value="@Model.StartedAt.ToString("o")" />
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div id="questionsContainer">
+                @for (int i = 0; i < Model.Questions.Count; i++)
+                {
+                    var question = Model.Questions[i];
+                    <div class="card shadow mb-4 question-card" data-question="@i">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                Question @(i + 1) of @Model.Questions.Count
+                                <span class="float-end">
+                                    <span class="badge bg-primary">1 mark</span>
+                                </span>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <p class="h6">@question.QuestionText</p>
+                            </div>
+                            
+                            <div class="options-container">
+                                <input type="hidden" name="Questions[@i].QuestionId" value="@question.QuestionId" />
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" 
+                                           name="Questions[@i].SelectedAnswer" value="A" id="q@(i)_A"
+                                           data-question-id="@question.QuestionId" required>
+                                    <label class="form-check-label" for="q@(i)_A">
+                                        <strong>A.</strong> @question.OptionA
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" 
+                                           name="Questions[@i].SelectedAnswer" value="B" id="q@(i)_B"
+                                           data-question-id="@question.QuestionId" required>
+                                    <label class="form-check-label" for="q@(i)_B">
+                                        <strong>B.</strong> @question.OptionB
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" 
+                                           name="Questions[@i].SelectedAnswer" value="C" id="q@(i)_C"
+                                           data-question-id="@question.QuestionId" required>
+                                    <label class="form-check-label" for="q@(i)_C">
+                                        <strong>C.</strong> @question.OptionC
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" 
+                                           name="Questions[@i].SelectedAnswer" value="D" id="q@(i)_D"
+                                           data-question-id="@question.QuestionId" required>
+                                    <label class="form-check-label" for="q@(i)_D">
+                                        <strong>D.</strong> @question.OptionD
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            
+            <div class="text-center mb-4">
+                <button type="submit" class="btn btn-success btn-lg me-3" id="submitBtn" onclick="confirmSubmit(event)">
+                    <i class="fas fa-check me-2"></i>Submit Quiz
+                </button>
+                <button type="button" class="btn btn-danger btn-lg" onclick="confirmExit()">
+                    <i class="fas fa-times me-2"></i>Exit Quiz
+                </button>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow sticky-top" style="top: 20px;">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Question Navigator
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        @for (int i = 0; i < Model.Questions.Count; i++)
+                        {
+                            <div class="col-3 mb-2">
+                                <button type="button" 
+                                        class="btn btn-outline-secondary navigator-btn" 
+                                        id="question-nav-@i" 
+                                        data-index="@i"
+                                        onclick="navigateToQuestion(@i)">
+                                    <span class="number">@(i + 1)</span>
+                                    <span class="check-icon d-none">✓</span>
+                                </button>
+                            </div>
+                        }
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <h6 class="mb-2">Progress</h6>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" id="progressBar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <small class="text-muted mt-2 d-block">
+                            <span id="answeredCount">0</span> of @Model.Questions.Count questions answered
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="mb-2">Legend</h6>
+                        <div class="d-flex gap-3">
+                            <div class="d-flex align-items-center">
+                                <button class="btn btn-success btn-sm me-2 navigator-btn">
+                                    <span class="check-icon">✓</span>
+                                </button>
+                                <small>Attempted</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <button class="btn btn-outline-secondary btn-sm me-2 navigator-btn">
+                                    <span class="number">2</span>
+                                </button>
+                                <small>Not Attempted</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <button class="btn btn-outline-secondary btn-sm me-2 navigator-btn current">
+                                    <span class="number">3</span>
+                                </button>
+                                <small>Current</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <style>
+                        .navigator-btn {
+                            width: 40px;
+                            height: 40px;
+                            padding: 0;
+                            position: relative;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-weight: 500;
+                            transition: all 0.3s ease;
+                            margin: 2px;
+                            border-radius: 8px;
+                        }
+
+                        .navigator-btn .number {
+                            font-size: 14px;
+                            font-weight: 600;
+                            position: relative;
+                            z-index: 2;
+                        }
+
+                        .navigator-btn .check-icon {
+                            display: none;
+                        }
+
+                        .navigator-btn.selected {
+                            background-color: #0d6efd;
+                            border-color: #0d6efd;
+                            color: white;
+                        }
+
+                        .navigator-btn.selected:hover {
+                            background-color: #0b5ed7;
+                            transform: translateY(-2px);
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        }
+
+                        .navigator-btn.current {
+                            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.5);
+                            z-index: 3;
+                        }
+
+                        .navigator-btn:hover {
+                            transform: translateY(-2px);
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        }
+
+                        .navigator-btn:active {
+                            transform: translateY(-1px);
+                            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+                        }
+
+                        /* Responsive styles */
+                        @@media (max-width: 768px) {
+                            .navigator-btn {
+                                width: 35px;
+                                height: 35px;
+                                font-size: 12px;
+                            }
+                        }
+                    </style>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @* Add SweetAlert2 CDN if not already included in _Layout.cshtml *@
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Prevent form resubmission on refresh
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeQuizInterface();
+            attachRadioListeners();
+            loadAnswerStates(); // Load any saved answers
+            updateAllNavigatorButtons();
+            setupScrollTracking();
+            startTimer(); // Start the timer when the DOM is loaded
+        });
+
+        function setupScrollTracking() {
+            // Create an Intersection Observer to track which question is currently visible
+            const options = {
+                root: null,
+                rootMargin: '-50% 0px',
+                threshold: 0
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const questionIndex = entry.target.dataset.question;
+                        updateNavigatorButton(parseInt(questionIndex));
+                    }
+                });
+            }, options);
+
+            // Observe all question cards
+            document.querySelectorAll('.question-card').forEach(card => {
+                observer.observe(card);
+            });
+
+            // Also update on scroll for smoother experience
+            let scrollTimeout;
+            window.addEventListener('scroll', () => {
+                if (scrollTimeout) {
+                    window.cancelAnimationFrame(scrollTimeout);
+                }
+                scrollTimeout = window.requestAnimationFrame(() => {
+                    updateCurrentQuestionFromScroll();
+                });
+            });
+        }
+
+        function updateCurrentQuestionFromScroll() {
+            const questionCards = document.querySelectorAll('.question-card');
+            const windowHeight = window.innerHeight;
+            const headerOffset = 100; // Same as in navigateToQuestion
+
+            let closestQuestion = null;
+            let closestDistance = Infinity;
+
+            questionCards.forEach(card => {
+                const rect = card.getBoundingClientRect();
+                const distance = Math.abs(rect.top - headerOffset);
+                
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestQuestion = card;
+                }
+            });
+
+            if (closestQuestion) {
+                const questionIndex = parseInt(closestQuestion.dataset.question);
+                updateNavigatorButton(questionIndex);
+            }
+        }
+
+        let timeLeft = @totalTime;
+        let timerInterval;
+        let isSubmitted = false;
+        let lastSavedTime = timeLeft;
+        
+        // Initialize timer with a simple countdown
+        function startTimer() {
+            // Clear any existing interval
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            
+            // Update immediately to show initial time
+            updateTimerDisplay();
+            
+            // Set up the interval
+            timerInterval = setInterval(function() {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    showTimeUpDialog();
+                } else if (timeLeft <= 300 && (lastSavedTime - timeLeft) >= 60) {
+                    // Auto-save every minute in the last 5 minutes
+                    lastSavedTime = timeLeft;
+                    autoSaveAnswers();
+                }
+            }, 1000);
+        }
+
+        function autoSaveAnswers() {
+            const formData = new FormData(document.getElementById('quizForm'));
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            
+            // You can add an auto-save endpoint here if needed
+            console.log('Auto-saving answers...', Object.fromEntries(formData));
+        }
+
+        function showTimeUpDialog() {
+            Swal.fire({
+                title: 'Time\'s Up!',
+                text: 'Your quiz time has expired. Your answers will now be submitted.',
+                icon: 'warning',
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                    document.getElementById('quizForm').submit();
+                }
+            });
+        }
+        
+        function updateTimerDisplay() {
+            if (!document.getElementById('timer')) return; // Safety check
+            
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const timerElement = document.getElementById('timer');
+            const formattedTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Only update if the display needs to change
+            if (timerElement.textContent !== formattedTime) {
+                timerElement.textContent = formattedTime;
+                
+                // Change color when time is running low
+                if (timeLeft <= 300) { // 5 minutes or less
+                    timerElement.classList.add('text-danger');
+                }
+            }
+        }
+        
+        function navigateToQuestion(questionIndex) {
+            // Find the question card
+            const questionCard = document.querySelector(`.question-card[data-question="${questionIndex}"]`);
+            if (!questionCard) return;
+
+            // Update navigator buttons
+            document.querySelectorAll('.navigator-btn').forEach(btn => {
+                btn.classList.remove('current');
+            });
+            
+            const navButton = document.getElementById(`question-nav-${questionIndex}`);
+            if (navButton) {
+                navButton.classList.add('current');
+            }
+
+            // Calculate scroll position with offset for fixed header
+            const headerOffset = 100; // Adjust based on your header height
+            const elementPosition = questionCard.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+            // Smooth scroll to the question
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        }
+        
+        // Track the current question when scrolling
+        document.addEventListener('DOMContentLoaded', function() {
+            const questionCards = document.querySelectorAll('.question-card');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const questionIndex = entry.target.dataset.question;
+                        document.querySelectorAll('.question-nav-btn').forEach(btn => {
+                            btn.classList.remove('current');
+                        });
+                        document.getElementById(`nav-question-${questionIndex}`).classList.add('current');
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            questionCards.forEach(card => observer.observe(card));
+        });
+        
+        function updateProgress() {
+            const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+            const total = @Model.Questions.Count;
+            const percentage = (answered / total) * 100;
+            
+            document.getElementById('progressBar').style.width = percentage + '%';
+            document.getElementById('answeredCount').textContent = answered;
+            
+            // Update question navigator
+            updateQuestionNavigator();
+        }
+        
+        function initializeQuizInterface() {
+            // Initialize the first question as current
+            const firstNavBtn = document.querySelector('.navigator-btn');
+            if (firstNavBtn) {
+                firstNavBtn.classList.add('current');
+            }
+        }
+
+        function attachRadioListeners() {
+            // Add change event listeners to radio buttons
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const questionCard = this.closest('.question-card');
+                    const questionIndex = parseInt(questionCard.dataset.question);
+                    
+                    // Update the navigator button
+                    updateNavigatorButton(questionIndex);
+                    
+                    // Update the progress
+                    updateProgressBar();
+                    
+                    // Save the answer state
+                    saveAnswerState(questionIndex, this.value);
+                });
+            });
+        }
+
+        // Store answers in session storage
+        function saveAnswerState(questionIndex, answer) {
+            const quizId = '@Model.QuizId';
+            const key = `quiz_${quizId}_question_${questionIndex}`;
+            sessionStorage.setItem(key, answer);
+        }
+
+        // Load answers from session storage
+        function loadAnswerStates() {
+            const quizId = '@Model.QuizId';
+            document.querySelectorAll('.question-card').forEach((card) => {
+                const questionIndex = card.dataset.question;
+                const key = `quiz_${quizId}_question_${questionIndex}`;
+                const savedAnswer = sessionStorage.getItem(key);
+                
+                if (savedAnswer) {
+                    const radio = card.querySelector(`input[type="radio"][value="${savedAnswer}"]`);
+                    if (radio) {
+                        radio.checked = true;
+                        updateNavigatorButton(parseInt(questionIndex));
+                    }
+                }
+            });
+            updateProgressBar();
+        }
+
+        function updateNavigatorButton(questionIndex) {
+            const navButton = document.getElementById(`question-nav-${questionIndex}`);
+            const questionCard = document.querySelector(`.question-card[data-question="${questionIndex}"]`);
+            
+            if (!navButton || !questionCard) return;
+
+            const selectedOption = questionCard.querySelector('input[type="radio"]:checked');
+            const isAnswered = selectedOption !== null;
+
+            // Clear existing classes but keep navigator-btn
+            navButton.className = 'btn navigator-btn';
+
+            if (isAnswered) {
+                // Apply selected state with green background for attempted questions
+                navButton.classList.add('btn-success');
+                navButton.setAttribute('title', 'Attempted');
+                
+                // Show check icon for attempted questions
+                const numberSpan = navButton.querySelector('.number');
+                const checkIcon = navButton.querySelector('.check-icon');
+                if (numberSpan && checkIcon) {
+                    numberSpan.classList.add('d-none');
+                    checkIcon.classList.remove('d-none');
+                }
+            } else {
+                navButton.classList.add('btn-outline-secondary');
+                navButton.setAttribute('title', 'Not attempted');
+                
+                // Show number for unattempted questions
+                const numberSpan = navButton.querySelector('.number');
+                const checkIcon = navButton.querySelector('.check-icon');
+                if (numberSpan && checkIcon) {
+                    numberSpan.classList.remove('d-none');
+                    checkIcon.classList.add('d-none');
+                }
+            }
+
+            // Update current question highlight
+            document.querySelectorAll('.navigator-btn').forEach(btn => {
+                btn.classList.remove('current');
+                // Preserve the attempted state
+                if (btn.classList.contains('btn-success')) {
+                    btn.classList.add('attempted');
+                }
+            });
+            navButton.classList.add('current');
+        }
+
+        function updateAllNavigatorButtons() {
+            document.querySelectorAll('.question-card').forEach((card, index) => {
+                updateNavigatorButton(index);
+            });
+            updateProgressBar();
+        }
+
+        function updateProgressBar() {
+            const totalQuestions = @Model.Questions.Count;
+            const answeredQuestions = document.querySelectorAll('.navigator-btn.answered').length;
+            const progressPercentage = (answeredQuestions / totalQuestions) * 100;
+            
+            document.getElementById('progressBar').style.width = `${progressPercentage}%`;
+            document.getElementById('answeredCount').textContent = answeredQuestions;
+        }
+        
+        async function confirmSubmit(e) {
+            if (e) e.preventDefault();
+            if (isSubmitted) return false;
+            
+            const form = document.getElementById('quizForm');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Validate answers
+            const { isValid, unansweredQuestions } = validateAnswers();
+            const unansweredCount = unansweredQuestions.length;
+            
+            if (unansweredCount > 0) {
+                const result = await Swal.fire({
+                    title: 'Unanswered Questions',
+                    html: `You have ${unansweredCount} unanswered question(s):<br>` +
+                          `Questions: ${unansweredQuestions.join(', ')}<br><br>` +
+                          'Are you sure you want to submit?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, submit quiz',
+                    cancelButtonText: 'No, continue quiz',
+                    allowOutsideClick: false
+                });
+
+                if (!result.isConfirmed) {
+                    return false;
+                }
+            }
+
+            // Disable submit button and show loading state
+            submitBtn.disabled = true;
+            isSubmitted = true;
+
+            try {
+                // Show loading state
+                Swal.fire({
+                    title: 'Submitting Quiz',
+                    text: 'Please wait while your answers are being submitted...',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    allowEnterKey: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Clear timer and session storage
+                clearInterval(timerInterval);
+                sessionStorage.removeItem(`quiz_${@Model.QuizId}_answers`);
+
+                // Submit form using fetch to handle the response properly
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                });
+
+                if (response.redirected) {
+                    // If the server redirects, follow the redirect
+                    window.location.href = response.url;
+                } else {
+                    const result = await response.text();
+                    if (result.includes('Error') || !response.ok) {
+                        throw new Error('Submission failed');
+                    }
+                    // Handle successful submission
+                    window.location.href = '@Url.Action("Index", "Student")';
+                }
+
+                return true;
+
+            } catch (error) {
+                console.error('Submission error:', error);
+                submitBtn.disabled = false;
+                isSubmitted = false;
+                
+                await Swal.fire({
+                    title: 'Error',
+                    text: 'Failed to submit quiz. Please try again.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                
+                return false;
+            }
+        }
+
+        // Helper function to cache form data and improve submission speed
+        function cacheFormData() {
+            const form = document.getElementById('quizForm');
+            const formData = new FormData(form);
+            const cache = {};
+            
+            for (let [key, value] of formData.entries()) {
+                cache[key] = value;
+            }
+            
+            return cache;
+        }
+
+        // Function to validate all answers quickly
+        function validateAnswers() {
+            const questions = document.querySelectorAll('.question-card');
+            let isValid = true;
+            let unansweredQuestions = [];
+
+            questions.forEach((question, index) => {
+                const answered = question.querySelector('input[type="radio"]:checked');
+                if (!answered) {
+                    isValid = false;
+                    unansweredQuestions.push(index + 1);
+                }
+            });
+
+            return { isValid, unansweredQuestions };
+        }
+
+        function confirmExit() {
+            Swal.fire({
+                title: 'Exit Quiz?',
+                text: 'Are you sure you want to exit? This will end your quiz attempt and you will receive a score of 0.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, exit quiz',
+                cancelButtonText: 'No, continue quiz',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    if (result.value) {
+                        exitQuiz();
+                    }
+                }
+            });
+        }
+
+        async function exitQuiz() {
+            try {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                const quizId = parseInt('@Model.QuizId');
+
+                // Show confirmation first
+                const confirmResult = await Swal.fire({
+                    title: 'Confirm Exit',
+                    text: 'Are you sure you want to exit? You will receive a score of 0.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, exit quiz',
+                    cancelButtonText: 'No, continue quiz',
+                    allowOutsideClick: false
+                });
+
+                if (!confirmResult.isConfirmed) {
+                    return;
+                }
+
+                // Show loading state
+                Swal.fire({
+                    title: 'Exiting Quiz...',
+                    text: 'Please wait while your attempt is being saved...',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    allowEnterKey: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Clear timer and storage immediately
+                clearInterval(timerInterval);
+                sessionStorage.removeItem(`quiz_${quizId}_answers`);
+                isSubmitted = true; // Prevent leave warning
+
+                // Send exit request with form data
+                const formData = new FormData();
+                formData.append('quizId', quizId);
+                
+                const response = await fetch('@Url.Action("ExitQuiz", "Student")', {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                // Redirect to student dashboard immediately
+                window.location.href = '@Url.Action("Index", "Student")';
+                
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Failed to exit quiz. Please try again.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    // Even if there's an error, redirect to dashboard
+                    window.location.href = '@Url.Action("Index", "Student")';
+                });
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            startTimer();
+            updateProgress();
+            
+            // Cache form elements for better performance
+            const form = document.getElementById('quizForm');
+            const radioInputs = document.querySelectorAll('input[type="radio"]');
+            
+            // Optimize radio button change handling
+            radioInputs.forEach(input => {
+                input.addEventListener('change', () => {
+                    requestAnimationFrame(() => {
+                        updateProgress();
+                        const questionCard = input.closest('.question-card');
+                        if (questionCard) {
+                            const questionIndex = parseInt(questionCard.dataset.question);
+                            updateNavigatorButton(questionIndex);
+                        }
+                    });
+                });
+            });
+        });
+        
+        // Warn before leaving page
+        window.addEventListener('beforeunload', function(e) {
+            if (!isSubmitted) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+
+        // Start the timer immediately
+        startTimer();
+    </script>
+}

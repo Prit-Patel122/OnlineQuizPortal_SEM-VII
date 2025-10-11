@@ -1,0 +1,99 @@
+@model IEnumerable<OnlineQuizPortal.Models.Quiz>
+
+@{
+    ViewData["Title"] = "Available Quizzes";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-success">
+            <i class="fas fa-list me-2"></i>Available Quizzes
+        </h2>
+        <p class="lead">Choose a quiz to start testing your knowledge!</p>
+    </div>
+</div>
+
+@if (Model.Any())
+{
+    <div class="row">
+        @foreach (var quiz in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm quiz-card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">@quiz.Title</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <span class="badge bg-secondary mb-2">@quiz.Subject</span>
+                        </div>
+                        
+                        <div class="row text-center mb-3">
+                            <div class="col-4">
+                                <div class="border rounded p-2">
+                                    <i class="fas fa-clock text-primary mb-1"></i>
+                                    <div class="small text-muted">Duration</div>
+                                    <strong>@quiz.Duration min</strong>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-2">
+                                    <i class="fas fa-question-circle text-info mb-1"></i>
+                                    <div class="small text-muted">Questions</div>
+                                    <strong>@quiz.Questions.Count</strong>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-2">
+                                    <i class="fas fa-star text-warning mb-1"></i>
+                                    <div class="small text-muted">Marks</div>
+                                    <strong>@quiz.TotalMarks</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-user me-1"></i>
+                                Created by: @quiz.CreatedByUser.Name
+                            </small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-hashtag me-1"></i>
+                                Quiz ID: @quiz.QuizId
+                            </small>
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a asp-action="Attempt" asp-route-id="@quiz.QuizId" class="btn btn-success btn-lg w-100">
+                            <i class="fas fa-play me-2"></i>Start Quiz
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="card shadow">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-inbox fa-4x text-muted mb-4"></i>
+            <h4 class="text-muted">No quizzes available</h4>
+            <p class="text-muted">There are currently no quizzes available for students. Please check back later.</p>
+        </div>
+    </div>
+}
+
+<style>
+    .quiz-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    .quiz-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+</style>

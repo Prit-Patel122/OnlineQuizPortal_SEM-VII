@@ -1,0 +1,267 @@
+@model OnlineQuizPortal.ViewModels.QuizViewModel
+
+@{
+    ViewData["Title"] = "Create Quiz";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-primary">
+            <i class="fas fa-plus me-2"></i>Create New Quiz
+        </h2>
+    </div>
+</div>
+
+<form asp-action="Create" method="post" id="quizForm">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Quiz Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label asp-for="Title" class="form-label"></label>
+                            <input asp-for="Title" class="form-control" placeholder="Enter quiz title" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="Subject" class="form-label"></label>
+                            <input asp-for="Subject" class="form-control" placeholder="e.g., Mathematics" />
+                            <span asp-validation-for="Subject" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Duration" class="form-label"></label>
+                            <div class="input-group">
+                                <input asp-for="Duration" class="form-control" type="number" min="1" max="300" />
+                                <span class="input-group-text">minutes</span>
+                            </div>
+                            <span asp-validation-for="Duration" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="TotalMarks" class="form-label"></label>
+                            <input asp-for="TotalMarks" class="form-control" type="number" min="1" max="1000" />
+                            <span asp-validation-for="TotalMarks" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Quick Tips
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled small">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Keep questions clear and concise
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Ensure all options are plausible
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Set appropriate time limits
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Review before publishing
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-question-circle me-2"></i>Questions
+            </h5>
+            <button type="button" class="btn btn-light btn-sm" onclick="addQuestion()">
+                <i class="fas fa-plus me-1"></i>Add Question
+            </button>
+        </div>
+        <div class="card-body">
+            <div id="questionsContainer">
+                @for (int i = 0; i < Model.Questions.Count; i++)
+                {
+                    <div class="question-item border rounded p-3 mb-3" data-question-index="@i">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h6 class="mb-0">Question @(i + 1)</h6>
+                            @if (i > 0)
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeQuestion(@i)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            }
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Question Text</label>
+                            <textarea name="Questions[@i].QuestionText" class="form-control" rows="3" 
+                                      placeholder="Enter your question here..." required></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Option A</label>
+                                <input name="Questions[@i].OptionA" class="form-control" placeholder="Option A" required />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Option B</label>
+                                <input name="Questions[@i].OptionB" class="form-control" placeholder="Option B" required />
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Option C</label>
+                                <input name="Questions[@i].OptionC" class="form-control" placeholder="Option C" required />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Option D</label>
+                                <input name="Questions[@i].OptionD" class="form-control" placeholder="Option D" required />
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Correct Answer</label>
+                                <select name="Questions[@i].CorrectAnswer" class="form-select" required>
+                                    <option value="">Select correct answer</option>
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                    <option value="D">D</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Marks</label>
+                                <input name="Questions[@i].Marks" class="form-control" type="number" min="1" max="10" value="1" />
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 text-center">
+            <button type="submit" class="btn btn-primary btn-lg me-3">
+                <i class="fas fa-save me-2"></i>Create Quiz
+            </button>
+            <a asp-action="Index" class="btn btn-secondary btn-lg">
+                <i class="fas fa-arrow-left me-2"></i>Back to List
+            </a>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        let questionCount = @Model.Questions.Count;
+
+        function addQuestion() {
+            const container = document.getElementById('questionsContainer');
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question-item border rounded p-3 mb-3';
+            questionDiv.setAttribute('data-question-index', questionCount);
+            
+            questionDiv.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h6 class="mb-0">Question ${questionCount + 1}</h6>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeQuestion(${questionCount})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Question Text</label>
+                    <textarea name="Questions[${questionCount}].QuestionText" class="form-control" rows="3" 
+                              placeholder="Enter your question here..." required></textarea>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Option A</label>
+                        <input name="Questions[${questionCount}].OptionA" class="form-control" placeholder="Option A" required />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Option B</label>
+                        <input name="Questions[${questionCount}].OptionB" class="form-control" placeholder="Option B" required />
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Option C</label>
+                        <input name="Questions[${questionCount}].OptionC" class="form-control" placeholder="Option C" required />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Option D</label>
+                        <input name="Questions[${questionCount}].OptionD" class="form-control" placeholder="Option D" required />
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Correct Answer</label>
+                        <select name="Questions[${questionCount}].CorrectAnswer" class="form-select" required>
+                            <option value="">Select correct answer</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Marks</label>
+                        <input name="Questions[${questionCount}].Marks" class="form-control" type="number" min="1" max="10" value="1" />
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(questionDiv);
+            questionCount++;
+        }
+
+        function removeQuestion(index) {
+            const questionDiv = document.querySelector(`[data-question-index="${index}"]`);
+            if (questionDiv) {
+                questionDiv.remove();
+                // Renumber remaining questions
+                const questions = document.querySelectorAll('.question-item');
+                questions.forEach((q, i) => {
+                    q.setAttribute('data-question-index', i);
+                    const questionNumber = q.querySelector('h6');
+                    if (questionNumber) {
+                        questionNumber.textContent = `Question ${i + 1}`;
+                    }
+                    // Update all input names
+                    const inputs = q.querySelectorAll('input, textarea, select');
+                    inputs.forEach(input => {
+                        const name = input.getAttribute('name');
+                        if (name) {
+                            input.setAttribute('name', name.replace(/\[\d+\]/, `[${i}]`));
+                        }
+                    });
+                });
+                questionCount = questions.length;
+            }
+        }
+    </script>
+}

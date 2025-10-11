@@ -1,0 +1,131 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="text-center mb-4">
+                <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+            </h1>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-5">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-book-open fa-3x mb-3"></i>
+                    <h5 class="card-title">Total Quizzes</h5>
+                    <h2 class="mb-0">@ViewBag.TotalQuizzes</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-question-circle fa-3x mb-3"></i>
+                    <h5 class="card-title">Total Questions</h5>
+                    <h2 class="mb-0">@ViewBag.TotalQuestions</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x mb-3"></i>
+                    <h5 class="card-title">Total Users</h5>
+                    <h2 class="mb-0">@ViewBag.TotalUsers</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                    <h5 class="card-title">Total Results</h5>
+                    <h2 class="mb-0">@ViewBag.TotalResults</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Results Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Recent Quiz Results
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Quiz</th>
+                                    <th>Score</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var result in ViewBag.RecentResults)
+                                {
+                                    <tr>
+                                        <td>@result.User.Name</td>
+                                        <td>@result.Quiz.Title</td>
+                                        <td>@(result.IsCompleted ? $"{result.Score}/{result.Quiz.TotalMarks}" : "In Progress")</td>
+                                        <td>@result.StartedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                                        <td>
+                                            @if (result.IsCompleted)
+                                            {
+                                                <span class="badge bg-success">Completed</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning">In Progress</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <a asp-controller="Admin" asp-action="AllResults" class="btn btn-primary w-100 mb-3">
+                <i class="fas fa-list me-2"></i>View All Results
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a asp-controller="Admin" asp-action="StudentPerformance" class="btn btn-success w-100 mb-3">
+                <i class="fas fa-user-graduate me-2"></i>Student Performance
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a asp-controller="Admin" asp-action="QuizStatistics" class="btn btn-info w-100 mb-3">
+                <i class="fas fa-chart-line me-2"></i>Quiz Statistics
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Add any dashboard-specific JavaScript here
+        $(document).ready(function () {
+            // Highlight the active navigation item
+            $('a.nav-link[href="/Admin"]').addClass('active');
+        });
+    </script>
+}

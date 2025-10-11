@@ -1,0 +1,215 @@
+@model OnlineQuizPortal.ViewModels.LoginViewModel
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="min-vh-100 d-flex align-items-center py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="text-center mb-4">
+                    <h1 class="text-white mb-3">
+                        <i class="fas fa-graduation-cap fa-2x"></i>
+                    </h1>
+                    <h2 class="text-white">Online Quiz Portal</h2>
+                    <p class="text-white-50">Welcome back! Please sign in to continue.</p>
+                </div>
+
+                <div class="card shadow-lg border-0 rounded-lg">
+                    <div class="card-body p-5">
+                <form asp-action="Login" method="post" id="loginForm" class="needs-validation" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label fw-bold">
+                            <i class="fas fa-envelope me-2"></i>Email Address
+                        </label>
+                        <div class="input-group has-validation">
+                            <span class="input-group-text">
+                                <i class="fas fa-envelope"></i>
+                            </span>
+                            <input asp-for="Email" class="form-control form-control-lg" 
+                                   placeholder="Enter email address" required />
+                            <div class="invalid-feedback">
+                                Please enter a valid email address
+                            </div>
+                        </div>
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label fw-bold">
+                            <i class="fas fa-lock me-2"></i>Password
+                        </label>
+                        <div class="input-group has-validation">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input asp-for="Password" class="form-control form-control-lg" 
+                                   placeholder="Enter password" required type="password" />
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <div class="invalid-feedback">
+                                Please enter your password
+                            </div>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label">Keep me signed in</label>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg" id="loginButton">
+                            <span class="spinner-border spinner-border-sm d-none" id="loginSpinner" role="status" aria-hidden="true"></span>
+                            <i class="fas fa-sign-in-alt me-2" id="loginIcon"></i>
+                            <span id="loginText">Login</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+                    <div class="card-footer bg-light p-4 text-center">
+                        <p class="mb-0">
+                            Don't have an account? 
+                            <a asp-action="Register" class="text-primary fw-bold text-decoration-none hover-scale">
+                                Create Account <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <a asp-controller="Home" asp-action="Index" 
+                       class="text-white text-decoration-none hover-fade">
+                        <i class="fas fa-home me-2"></i>Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .input-group-text {
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        box-shadow: none;
+        border-color: #4e73df;
+    }
+    
+    .form-control:focus + .input-group-text,
+    .form-control:focus ~ .input-group-text {
+        border-color: #4e73df;
+        color: #4e73df;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 15px rgba(78, 115, 223, 0.3);
+    }
+    
+    .card {
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .hover-scale {
+        transition: transform 0.3s ease;
+    }
+
+    .hover-scale:hover {
+        transform: scale(1.05);
+    }
+
+    .hover-fade {
+        opacity: 0.8;
+        transition: opacity 0.3s ease;
+    }
+
+    .hover-fade:hover {
+        opacity: 1;
+    }
+
+    .input-group {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    .input-group:focus-within {
+        box-shadow: 0 4px 6px rgba(78, 115, 223, 0.1);
+    }
+</style>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Password visibility toggle
+            const togglePassword = document.querySelector('#togglePassword');
+            const password = document.querySelector('#Password');
+            
+            togglePassword.addEventListener('click', function () {
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+            
+            // Form validation and submission
+            const form = document.querySelector('#loginForm');
+            const loginButton = document.querySelector('#loginButton');
+            const loginSpinner = document.querySelector('#loginSpinner');
+            const loginIcon = document.querySelector('#loginIcon');
+            const loginText = document.querySelector('#loginText');
+            
+            form.addEventListener('submit', async function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                } else {
+                    // Show loading state
+                    loginButton.disabled = true;
+                    loginSpinner.classList.remove('d-none');
+                    loginIcon.classList.add('d-none');
+                    loginText.textContent = 'Logging in...';
+                }
+                
+                form.classList.add('was-validated');
+            });
+            
+            // Clear validation on input change
+            const inputs = form.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    if (form.classList.contains('was-validated')) {
+                        if (this.checkValidity()) {
+                            this.classList.remove('is-invalid');
+                            this.classList.add('is-valid');
+                        } else {
+                            this.classList.remove('is-valid');
+                            this.classList.add('is-invalid');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}

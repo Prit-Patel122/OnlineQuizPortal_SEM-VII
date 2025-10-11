@@ -1,0 +1,157 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    var availableQuizzes = ViewBag.AvailableQuizzes as List<OnlineQuizPortal.Models.Quiz>;
+    var recentResults = ViewBag.RecentResults as List<OnlineQuizPortal.Models.Result>;
+    var userRole = ViewBag.UserRole as string;
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-success">
+            <i class="fas fa-user-graduate me-2"></i>Student Dashboard
+        </h2>
+        <p class="lead">Welcome! Here are your available quizzes and recent results.</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-play-circle me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-controller="Student" asp-action="Index" class="btn btn-success">
+                        <i class="fas fa-list me-2"></i>View All Quizzes
+                    </a>
+                    <a asp-controller="Student" asp-action="History" class="btn btn-outline-success">
+                        <i class="fas fa-history me-2"></i>View My Results
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h3 class="text-success">@availableQuizzes.Count</h3>
+                        <p class="text-muted">Available Quizzes</p>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-primary">@recentResults.Count</h3>
+                        <p class="text-muted">Completed Quizzes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Available Quizzes
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (availableQuizzes.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var quiz in availableQuizzes.Take(3))
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">@quiz.Title</h6>
+                                    <small class="text-muted">
+                                        <span class="badge bg-secondary me-2">@quiz.Subject</span>
+                                        <i class="fas fa-clock me-1"></i>@quiz.Duration min
+                                        <i class="fas fa-star me-1 ms-2"></i>@quiz.TotalMarks marks
+                                    </small>
+                                </div>
+                                <a asp-controller="Student" asp-action="Attempt" asp-route-id="@quiz.QuizId" 
+                                   class="btn btn-sm btn-primary">
+                                    <i class="fas fa-play me-1"></i>Start
+                                </a>
+                            </div>
+                        }
+                    </div>
+                    @if (availableQuizzes.Count > 3)
+                    {
+                        <div class="text-center mt-3">
+                            <a asp-controller="Student" asp-action="Index" class="btn btn-outline-primary">
+                                View All @availableQuizzes.Count Quizzes
+                            </a>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No quizzes available at the moment.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Results
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (recentResults.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var result in recentResults)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">@result.Quiz.Title</h6>
+                                    <small class="text-muted">
+                                        Completed: @result.CompletedAt?.ToString("MMM dd, yyyy")
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-@(result.Score >= 7 ? "success" : result.Score >= 5 ? "warning" : "danger")">
+                                        @result.Score
+                                    </span>
+                                    <br>
+                                    <small class="text-muted">@result.Score marks</small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="text-center mt-3">
+                        <a asp-controller="Student" asp-action="History" class="btn btn-outline-warning">
+                            View All Results
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No quiz attempts yet. Start your first quiz!</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

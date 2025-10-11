@@ -1,0 +1,221 @@
+@{
+    ViewData["Title"] = "Quiz Statistics";
+    var quizStats = ViewBag.QuizStats;
+    var titles = ViewBag.Titles;
+    var attempts = ViewBag.Attempts;
+    var scores = ViewBag.Scores;
+    var completion = ViewBag.Completion;
+    var subjectStats = ViewBag.SubjectStats;
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="text-center mb-4">
+                <i class="fas fa-chart-line me-2"></i>Quiz Statistics Dashboard
+            </h1>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-analytics me-2"></i>Quiz Performance Metrics</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-light" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel me-2"></i>Export to Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="quizStatsTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Quiz Title</th>
+                            <th>Subject</th>
+                            <th>Total Attempts</th>
+                            <th>Average Score</th>
+                            <th>Completion Rate</th>
+                            <th>Total Marks</th>
+                            <th>Engagement Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var stat in quizStats)
+                        {
+                            <tr>
+                                <td>@stat.Quiz.Title</td>
+                                <td>@stat.Quiz.Subject</td>
+                                <td>@stat.TotalAttempts</td>
+                                <td>@stat.AverageScore.ToString("0.00")%</td>
+                                <td>@stat.CompletionRate.ToString("0.00")%</td>
+                                <td>@stat.Quiz.TotalMarks</td>
+                                <td>
+                                    @{
+                                        var level = stat.TotalAttempts switch
+                                        {
+                                            > 20 => new { Class = "bg-success", Text = "High" },
+                                            > 10 => new { Class = "bg-info", Text = "Medium" },
+                                            _ => new { Class = "bg-warning", Text = "Low" }
+                                        };
+                                    }
+                                    <span class="badge @level.Class">@level.Text</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Charts -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Quiz Engagement</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="engagementChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Performance Trends</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-radar me-2"></i>Subject Performance</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="subjectChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Initialize DataTable
+            $('#quizStatsTable').DataTable({
+                order: [[2, 'desc']], // Sort by Total Attempts by default
+                pageLength: 25,
+                responsive: true
+            });
+
+            // Get data from server
+            var chartData = {
+                labels: @Html.Raw(Json.Serialize(titles)),
+                attempts: @Html.Raw(Json.Serialize(attempts)),
+                scores: @Html.Raw(Json.Serialize(scores)),
+                completion: @Html.Raw(Json.Serialize(completion))
+            };
+            var subjectData = @Html.Raw(Json.Serialize(subjectStats));
+
+            // Create Engagement Chart
+            new Chart(document.getElementById('engagementChart'), {
+                type: 'bar',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        label: 'Total Attempts',
+                        data: chartData.attempts,
+                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Create Performance Chart
+            new Chart(document.getElementById('performanceChart'), {
+                type: 'line',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        label: 'Average Score (%)',
+                        data: chartData.scores,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        tension: 0.1,
+                        fill: false
+                    }, {
+                        label: 'Completion Rate (%)',
+                        data: chartData.completion,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        tension: 0.1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+
+            // Create Subject Performance Chart
+
+            new Chart(document.getElementById('subjectChart'), {
+                type: 'radar',
+                data: {
+                    labels: subjectData.map(s => s.Subject),
+                    datasets: [{
+                        label: 'Average Score (%)',
+                        data: subjectData.map(s => s.AverageScore),
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        pointBackgroundColor: 'rgba(54, 162, 235, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                stepSize: 20
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        function exportToExcel() {
+            const table = document.getElementById('quizStatsTable');
+            const wb = XLSX.utils.table_to_book(table, { sheet: "Quiz Statistics" });
+            XLSX.writeFile(wb, 'QuizStatistics.xlsx');
+        }
+    </script>
+}

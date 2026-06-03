@@ -47,7 +47,7 @@ The portal is designed to be **secure**, **scalable**, and **easy to use**, with
 | **SQL Server** | Backend relational database |
 | **C#** | Server-side programming language |
 | **Bootstrap 5** | Responsive front-end framework |
-| **HTML5 / CSS3 / JavaScript** | Front-end design and interactivity |
+| **HTML5 / CSS3 / JavaScript / React18** | Front-end design and interactivity |
 | **LINQ** | Data querying and filtering |
 | **Identity Framework** | Authentication and user management |
 
